@@ -1,0 +1,52 @@
+#import "Lib_v0+equal+know";
+
+
+// Keys exchange
+//channel SR 0;
+//Define T 1;   
+//var<SKey> SKsender = new SKey();
+//var<PKey> PKsender = new PKey(SKsender); 
+//var<SKey> SKreceive = new SKey();
+//var<PKey> PKreceive = new PKey(SKreceive); 
+//
+//sender(i) = SR!PKsender -> SR?Var_PKreceive -> Skip;
+//receive(i) = SR?Var_PKsender -> SR!PKreceive -> Skip;
+
+//channel c 0; //or channel c 1; 
+// var x = 1;
+//
+//P = c!x{ x = 2 } -> P;
+//      Q = c?y{ x = y; } -> Q;
+//      A = P ||| Q;
+      
+// secretcode verification
+channel SR 0;
+var SecretCode = 1;
+var BurnAddress = 1;
+
+receive() = SR!SecretCode{SecretCode = 1} -> SR!BurnAddress{BurnAddress = 1} -> Skip;
+sender() = SR?SecretCode_New{SecretCode = SecretCode_New} -> SR?BurnAddress_New{BurnAddress = BurnAddress_New} -> Skip;
+
+// exit-transaction check
+//var asset = 10;
+//ExitTransaction() = if(asset > 0 && BurnAddress == 1)
+//{
+//
+//}
+
+//sourceChain
+var asset = 10;
+channel BurnAdd 0;
+contract_source() =	BurnAdd?asset{asset = 10} -> Skip;
+
+
+
+//
+//sender() = Skip;
+//receive() = Skip;
+//contract_source() = Skip;
+//contract_destination() = Skip;
+//source_miner() = Skip;
+//destination_miner() = Skip;
+//
+protocol() = sender() || receive() || contract_source(); //|| contract_destination() || source_miner() || destination_miner();
