@@ -14,12 +14,12 @@
 
 //channel c 0; //or channel c 1; 
 // var x = 1;
-//
 //P = c!x{ x = 2 } -> P;
 //      Q = c?y{ x = y; } -> Q;
 //      A = P ||| Q;
-      
-// secretcode verification
+var Sender = 10;
+var Receiver = 0;     
+// secretcode verification    
 channel SR 0;
 var SecretCode = 1;
 var BurnAddress = 1;
@@ -37,11 +37,35 @@ sender() = SR?SecretCode_New{SecretCode = SecretCode_New} -> SR?BurnAddress_New{
 //sourceChain
 var asset = 10;
 channel BurnAdd 0;
-contract_source() =	BurnAdd?asset{asset = 10} -> Skip;
+contract_source() =	BurnAdd?asset_1{asset = asset_1} -> SR?receiverGetTheMessage -> SourceMiner?sourceMinerGetTheMessage -> checkingBurnAsset();
+
+//checking burn	asset transaction
+checkingBurnAsset() = if(BurnAdd == 10)
+{
+TheProcessIsGoing -> Contract_destination()
+}
+else
+{
+Stop
+};
 
 
+//contract_destination
+contract_destination() = SR?asset_2{asset = asset_2} -> notification();
+
+//notification_  destinationchain -> sender and receiver;    
+notification() = senderGetTheMessage -> receiverGetTheMessage -> Skip;
 
 //
+
+
+//source_miner
+channel SourceMiner 0;
+var SecretKey = 1;
+source_miner() = SourceMiner?SecretKey_New{SecretKey = SecretKey_New} -> Skip;
+
+
+
 //sender() = Skip;
 //receive() = Skip;
 //contract_source() = Skip;
@@ -49,4 +73,4 @@ contract_source() =	BurnAdd?asset{asset = 10} -> Skip;
 //source_miner() = Skip;
 //destination_miner() = Skip;
 //
-protocol() = sender() || receive() || contract_source(); //|| contract_destination() || source_miner() || destination_miner();
+protocol() = sender() || receive() || contract_source() || contract_destination() || source_miner() || notification(); // || destination_miner();
