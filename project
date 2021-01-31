@@ -1,76 +1,61 @@
 #import "Lib_v0+equal+know";
-
+#define TimeLock 1;
+#define Going 5;
+#define Off 6;
+#define Notification 7;
+#define TXmind 7;
 
 // Keys exchange
-//channel SR 0;
-//Define T 1;   
-//var<SKey> SKsender = new SKey();
-//var<PKey> PKsender = new PKey(SKsender); 
-//var<SKey> SKreceive = new SKey();
-//var<PKey> PKreceive = new PKey(SKreceive); 
-//
-//sender(i) = SR!PKsender -> SR?Var_PKreceive -> Skip;
-//receive(i) = SR?Var_PKsender -> SR!PKreceive -> Skip;
+channel SenderAndRecipient 0;
+channel SenderAndSourceChain 0;
+channel RecipientAndSourcechain 0;
+channel SourceChainAndSourceMiner 0;
 
-//channel c 0; //or channel c 1; 
-// var x = 1;
-//P = c!x{ x = 2 } -> P;
-//      Q = c?y{ x = y; } -> Q;
-//      A = P ||| Q;
-var Sender = 10;
-var Receiver = 0;     
-// secretcode verification    
-channel SR 0;
-var SecretCode = 1;
+channel SourceChainAndEvent 0;
+
+
+var<SKey> SKsender = new SKey();
+var<PKey> PKsender = new PKey(SKsender); 
+var<SKey> SKreceive = new SKey();
+var<PKey> PKreceive = new PKey(SKreceive); 
+
+var<PEnc> cipherScode;
+var<PDec> decipherScode;
+
+var money;
 var BurnAddress = 1;
+var SecredCode = 1;   
+var Address = [SecredCode, BurnAddress, money];
+var Encrypt = [SecredCode, cipherScode];
+var Event1 = [BurnAddress, SecredCode, TimeLock, money];
 
-receive() = SR!SecretCode{SecretCode = 1} -> SR!BurnAddress{BurnAddress = 1} -> Skip;
-sender() = SR?SecretCode_New{SecretCode = SecretCode_New} -> SR?BurnAddress_New{BurnAddress = BurnAddress_New} -> Skip;
+var ExitTransaction;
+var going;
+var off;
 
-// exit-transaction check
-//var asset = 10;
-//ExitTransaction() = if(asset > 0 && BurnAddress == 1)
-//{
-//
-//}
+sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew -> SenderAndRecipient!SecredCode.cipherScode ->  
+SenderAndSourceChain!ExitTransaction{if(money>=0 && BurnAddress == true && TimeLock == true && cipherScode == true )  // something wrong
+                      {going = Going;}
+                   else
+                      {off = Off;}} -> 
+SenderAndRecipient!decipherScode -> Skip;
+                   
 
-//sourceChain
-var asset = 10;
-channel BurnAdd 0;
-contract_source() =	BurnAdd?asset_1{asset = asset_1} -> SR?receiverGetTheMessage -> SourceMiner?sourceMinerGetTheMessage -> checkingBurnAsset();
-
-//checking burn	asset transaction
-checkingBurnAsset() = if(BurnAdd == 10)
-{
-TheProcessIsGoing -> Contract_destination()
-}
-else
-{
-Stop
-};
+receive() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address -> SenderAndRecipient?SecredCodeNew.cipherScodeNew -> 
+RecipientAndSourcechain?NotificationNew -> SenderAndRecipient?decipherScodeNew -> Skip;
 
 
-//contract_destination
-contract_destination() = SR?asset_2{asset = asset_2} -> notification();
-
-//notification_  destinationchain -> sender and receiver;    
-notification() = senderGetTheMessage -> receiverGetTheMessage -> Skip;
-
-//
+SourceChain() = SenderAndSourceChain?ExitTransactionNew -> SourceChainAndSourceMiner!Notification -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification -> 
+SourceChainAndEvent!Event1 -> Skip;
 
 
-//source_miner
-channel SourceMiner 0;
-var SecretKey = 1;
-source_miner() = SourceMiner?SecretKey_New{SecretKey = SecretKey_New} -> Skip;
+DestinationChain() = Skip;
+
+
+SourceMiner() = SourceChainAndSourceMiner?NotificationNew -> SourceChainAndSourceMiner!TXmind -> Skip;
+
+Event() = SourceChainAndEvent?Event1New ->Skip;
 
 
 
-//sender() = Skip;
-//receive() = Skip;
-//contract_source() = Skip;
-//contract_destination() = Skip;
-//source_miner() = Skip;
-//destination_miner() = Skip;
-//
-protocol() = sender() || receive() || contract_source() || contract_destination() || source_miner() || notification(); // || destination_miner();
+protocol() = sender() || receive() || SourceChain() ||DestinationChain() || SourceMiner() || Event();
