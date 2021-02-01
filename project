@@ -3,15 +3,22 @@
 #define Going 5;
 #define Off 6;
 #define Notification 7;
-#define TXmind 7;
+#define CheckingBurnAssetTransaction 7;
+
 
 // Keys exchange
 channel SenderAndRecipient 0;
 channel SenderAndSourceChain 0;
 channel RecipientAndSourcechain 0;
 channel SourceChainAndSourceMiner 0;
+channel SourceAndDestination 0;
+channel DestinationAndDestinationMiner 0;
+channel SourceAndDestinationMiner 0;
+channel SenderAndDestination 0;
+channel RecipientAndDestination 0;
 
 channel SourceChainAndEvent 0;
+channel DestinationAndEvent 0;
 
 
 var<SKey> SKsender = new SKey();
@@ -19,43 +26,54 @@ var<PKey> PKsender = new PKey(SKsender);
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
 
-var<PEnc> cipherScode;
-var<PDec> decipherScode;
+var<AEnc> cipherScode;
+var<ADec> decipherScode;
 
-var money;
+var moneyS;
+var moneyR;
+var asset;
 var BurnAddress = 1;
 var SecredCode = 1;   
-var Address = [SecredCode, BurnAddress, money];
+var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
-var Event1 = [BurnAddress, SecredCode, TimeLock, money];
 
 var ExitTransaction;
 var going;
 var off;
+var TXmind;
+var TXID;
 
-sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew -> SenderAndRecipient!SecredCode.cipherScode ->  
-SenderAndSourceChain!ExitTransaction{if(money>=0 && BurnAddress == true && TimeLock == true && cipherScode == true )  // something wrong
-                      {going = Going;}
+var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
+var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
+
+
+sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
+tau{cipherScode = new AEnc(SecredCodeNew,PKsender)} -> SenderAndRecipient!cipherScode ->  
+SenderAndSourceChain!ExitTransaction{if(moneyS>=0 && BurnAddress == true && TimeLock == true && cipherScode == true )  // something wrong
+                      {going = Going;
+                       moneyS = moneyS - asset;}
                    else
-                      {off = Off;}} -> 
-SenderAndRecipient!decipherScode -> Skip;
+                      {off = Off;}} -> tau{decipherScode = new ADec()} -> 
+SenderAndRecipient!decipherScode -> SenderAndDestination?NotificationNew -> Skip;
                    
 
-receive() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address -> SenderAndRecipient?SecredCodeNew.cipherScodeNew -> 
-RecipientAndSourcechain?NotificationNew -> SenderAndRecipient?decipherScodeNew -> Skip;
+recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
+RecipientAndSourcechain?NotificationNew -> SenderAndRecipient?decipherScodeNew -> SourceAndDestination!Address.SecredCode.TXID-> RecipientAndDestination?NotificationNew -> Skip;
 
 
 SourceChain() = SenderAndSourceChain?ExitTransactionNew -> SourceChainAndSourceMiner!Notification -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification -> 
-SourceChainAndEvent!Event1 -> Skip;
+SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> Skip;
 
 
-DestinationChain() = Skip;
+DestinationChain() = SourceAndDestination?AddressNew.SecredCodeNew.TXIDNew -> DestinationAndDestinationMiner!Notification -> DestinationAndDestinationMiner?TXmindNew -> 
+SenderAndDestination!Notification -> RecipientAndDestination!Notification -> DestinationAndEvent!Event2 -> Skip;
 
 
-SourceMiner() = SourceChainAndSourceMiner?NotificationNew -> SourceChainAndSourceMiner!TXmind -> Skip;
+SourceMiner() = SourceChainAndSourceMiner?Notification -> SourceChainAndSourceMiner!TXmind -> Skip;
+DestinationMiner() = DestinationAndDestinationMiner?NotificationNew -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Event() = SourceChainAndEvent?Event1New ->Skip;
+Event() = SourceChainAndEvent?Event1New -> DestinationAndEvent?Event2New -> Skip;
 
 
 
-protocol() = sender() || receive() || SourceChain() ||DestinationChain() || SourceMiner() || Event();
+protocol() = sender() || recipient() || SourceChain() ||DestinationChain() || SourceMiner() || Event() || DestinationMiner();
