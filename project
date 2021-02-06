@@ -52,11 +52,11 @@ var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
 tau{cipherScode = new AEnc()} -> SenderAndRecipient!cipherScode -> 
-//tau{Exitransaction = if(moneyS>=0 && BurnAddress == true && TimeLock == true && cipherScode == true )  // something wrong
-//                      {going = Going
-//                       moneyS = moneyS - asset}
-//                   else
-//                      {off = Off}} ->  
+tau{if(moneyS>=0 && BurnAddress == true && TimeLock == true && cipherScode == true )  // something wrong
+                      {ExitTransaction = Going;
+                       moneyS = moneyS - asset;}
+                   else
+                      {ExitTransaction = Off;}} ->  
 SenderAndSourceChain!ExitTransaction -> tau{decipherScode = new ADec()} -> 
 SenderAndRecipient!decipherScode -> SenderAndDestination?Notification3 -> Skip;
                    
