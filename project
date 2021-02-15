@@ -6,7 +6,8 @@
 #define Notification2 7;
 #define Notification3 7;
 #define Notification4 7;
-#define CheckingBurnAssetTransaction 7;
+#define CheckingBurnAssetTransaction 8;
+#define ReclaimCheck 8;
 
 
 // Keys exchange
@@ -39,7 +40,7 @@ var moneyR;
 var moneyRnew;
 var asset;
 var BurnAddress = 1;
-var SecredCode = 1;   
+var <SKey> SecredCode = new SKey();   
 var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
 
@@ -51,19 +52,28 @@ var TXID;
 
 var time = 1;
 var EntryTransaction;
+var reclaim = 0;
+var repeat = 0;
 
 var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
 var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
+var Event3 = 0;
+
 
 
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
-tau{cipherScode = new AEnc()} -> SenderAndRecipient!cipherScode -> 
+tau{cipherScode = new SEnc()} -> SenderAndRecipient!cipherScode -> 
 tau{if(moneyS>=0 && BurnAddress == true && TimeLock == true && cipherScode == true)
                       {ExitTransaction = Going;
                        moneySnew = moneyS - asset;}
                    else
                       {ExitTransaction = Off;}} ->  
-SenderAndSourceChain!ExitTransaction -> tau{decipherScode = new ADec()} -> SenderAndRecipient!decipherScode -> SenderAndDestination?Notification3 -> Skip;
+SenderAndSourceChain!ExitTransaction -> tau{decipherScode = new ADec()} -> SenderAndRecipient!decipherScode -> SenderAndDestination?Notification3 ->
+tau{if(time>TimeLock)
+       {reclaim = repeat;}
+    else
+       {reclaim = Going;}} -> 
+SenderAndSourceChain!reclaim -> Skip;
                    
 
 recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
@@ -77,17 +87,18 @@ RecipientAndDestination!EntryTransaction -> RecipientAndDestination?Notification
 
 
 SourceChain() = SenderAndSourceChain?ExitTransactionNew -> SourceChainAndSourceMiner!Notification1 -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification2 -> 
-SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> Skip;
+SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> 
+SourceChainAndEvent!Event3 -> Skip;
 
 
 DestinationChain() = RecipientAndDestination?EntryTransactionNew -> DestinationAndDestinationMiner!Notification4 -> DestinationAndDestinationMiner?TXmindNew -> 
-SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> Skip;
+SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
 SourceMiner() = SourceChainAndSourceMiner?Notification1 -> SourceChainAndSourceMiner!TXmind -> SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
 DestinationMiner() = DestinationAndDestinationMiner?Notification4 -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Event() = SourceChainAndEvent?Event1New -> DestinationAndEvent?Event2New -> Skip;
+Event() = SourceChainAndEvent?Event1New -> DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
 
 
 
