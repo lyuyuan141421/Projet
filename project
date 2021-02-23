@@ -25,22 +25,21 @@ channel RecipientAndDestination 0;
 channel SourceChainAndEvent 0;
 channel DestinationAndEvent 0;
 
-
+var SecredCode = 1;
 var<SKey> SKsender = new SKey();
 var<PKey> PKsender = new PKey(SKsender); 
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
 
-var<AEnc> cipherScode;
+var<AEnc> cipherScode;                     
 var<ADec> decipherScode;
 
 var moneyS;
 var moneySnew;
 var moneyR;
 var moneyRnew;
-var asset;
-var BurnAddress = 1;
-var <SKey> SecredCode = new SKey();   
+var asset = 0;
+var BurnAddress = 0;   
 var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
 
@@ -62,13 +61,11 @@ var Event3 = 0;
 
 
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
-tau{cipherScode = new SEnc()} -> SenderAndRecipient!cipherScode -> 
-tau{if(moneyS>=0 && BurnAddress == true && TimeLock == true && cipherScode == true)
-                      {ExitTransaction = Going;
-                       moneySnew = moneyS - asset;}
-                   else
-                      {ExitTransaction = Off;}} ->  
-SenderAndSourceChain!ExitTransaction -> tau{decipherScode = new ADec()} -> SenderAndRecipient!decipherScode -> SenderAndDestination?Notification3 ->
+tau{cipherScode = new SEnc(SecredCode,PKreceive)} -> SenderAndRecipient!cipherScode -> 
+tau{if(moneyS>=0 && TimeLock >= 0)
+                      {moneySnew = moneyS - asset;}} -> 
+tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> 
+tau{decipherScode = new SDec(cipherScode)} -> SenderAndRecipient!decipherScode -> SenderAndDestination?Notification3 ->
 tau{if(time>TimeLock)
        {reclaim = repeat;}
     else
@@ -78,20 +75,17 @@ SenderAndSourceChain!reclaim -> Skip;
 
 recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
 RecipientAndSourcechain?Notification2 -> SenderAndRecipient?decipherScodeNew -> 
-tau{if(moneyS>0 && moneySnew<moneyS && time<TimeLock)
-      {EntryTransaction = Going;
-       moneyRnew = moneyR + asset;}
-      else
-      {EntryTransaction = Off;}} -> 
-RecipientAndDestination!EntryTransaction -> RecipientAndDestination?Notification3 -> Skip;
+tau{if(BurnAddress == asset && decipherScode == SecredCode && time<TimeLock)  //problem
+      {moneyRnew = moneyR + asset;}} -> 
+RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> Skip;
 
 
-SourceChain() = SenderAndSourceChain?ExitTransactionNew -> SourceChainAndSourceMiner!Notification1 -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification2 -> 
+SourceChain() = SenderAndSourceChain?BurnAddressNew.assetNew.cipherScodeNew.TimeLockNew -> SourceChainAndSourceMiner!Notification1 -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification2 -> 
 SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> 
 SourceChainAndEvent!Event3 -> Skip;
 
 
-DestinationChain() = RecipientAndDestination?EntryTransactionNew -> DestinationAndDestinationMiner!Notification4 -> DestinationAndDestinationMiner?TXmindNew -> 
+DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4 -> DestinationAndDestinationMiner?TXmindNew -> 
 SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
