@@ -6,6 +6,9 @@
 #define Notification2 7;
 #define Notification3 7;
 #define Notification4 7;
+#define HashResult 7;
+#define HashResultConfirm 7;
+#define LoginNewTransaction 7;
 #define CheckingBurnAssetTransaction 8;
 #define ReclaimCheck 8;
 
@@ -21,6 +24,7 @@ channel DestinationAndDestinationMiner 0;
 channel SourceAndDestinationMiner 0;
 channel SenderAndDestination 0;
 channel RecipientAndDestination 0;
+channel SourceMinerAndEvent 0;
 
 channel SourceChainAndEvent 0;
 channel DestinationAndEvent 0;
@@ -53,6 +57,8 @@ var time = 1;
 var EntryTransaction;
 var reclaim = 0;
 var repeat = 0;
+var Miner_verification = 0;
+var Miner_verified_successfully;
 
 var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
 var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
@@ -80,20 +86,23 @@ tau{if(BurnAddress == asset && decipherScode == SecredCode && time<TimeLock)  //
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> Skip;
 
 
-SourceChain() = SenderAndSourceChain?BurnAddressNew.assetNew.cipherScodeNew.TimeLockNew -> SourceChainAndSourceMiner!Notification1 -> SourceChainAndSourceMiner?TXmindNew -> RecipientAndSourcechain!Notification2 -> 
-SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> 
-SourceChainAndEvent!Event3 -> Skip;
+SourceChain() = SenderAndSourceChain?BurnAddressNew.assetNew.cipherScodeNew.TimeLockNew -> SourceChainAndSourceMiner!Notification1.cipherScode -> SourceChainAndSourceMiner?TXmindNew -> 
+RecipientAndSourcechain!Notification2 -> SourceChainAndEvent!Event1 -> SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> 
+SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> SourceChainAndEvent!Event3 -> Skip;
 
 
 DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4 -> DestinationAndDestinationMiner?TXmindNew -> 
 SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
-SourceMiner() = SourceChainAndSourceMiner?Notification1 -> SourceChainAndSourceMiner!TXmind -> SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
+SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> SourceMinerAndEvent!HashResult -> 
+SourceMinerAndEvent?HashResultConfirm -> SourceMinerAndEvent!LoginNewTransaction -> SourceChainAndSourceMiner!TXmind -> SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
+
 DestinationMiner() = DestinationAndDestinationMiner?Notification4 -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Event() = SourceChainAndEvent?Event1New -> DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
 
+Event() = SourceMinerAndEvent?HashResult -> SourceMinerAndEvent!HashResultConfirm -> SourceMinerAndEvent?LoginNewTransaction -> SourceChainAndEvent?Event1New -> 
+DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
 
 
 protocol() = sender() || recipient() || SourceChain() ||DestinationChain() || SourceMiner() || Event() || DestinationMiner();
