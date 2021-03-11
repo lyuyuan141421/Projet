@@ -26,27 +26,31 @@ channel SourceAndDestinationMiner 0;
 channel SenderAndDestination 0;
 channel RecipientAndDestination 0;
 channel SourceMinerAndEvent 0;
+channel DestinationMinerAndEvent 0;
 
 channel SourceChainAndEvent 0;
 channel DestinationAndEvent 0;
 
 channel Miner1AndSourceMiner 0;
 channel Miner2AndSourceMiner 0;
+channel Miner1AndDestinationMiner 0;
+channel Miner2AndDestinationMiner 0;
 
 var SecredCode = 1;
 var<SKey> SKsender = new SKey();
 var<PKey> PKsender = new PKey(SKsender); 
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
+// var<Noce> SecredCode = new Noce(i);
 
 var<AEnc> cipherScode;                     
 var<ADec> decipherScode;
 
-var moneyS;
+var moneyS = 10;
 var moneySnew;
-var moneyR;
+var moneyR = 0;
 var moneyRnew;
-var asset = 0;
+var asset = 1;
 var BurnAddress = 0;   
 var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
@@ -73,7 +77,7 @@ var Event3 = 0;
 
 
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
-tau{cipherScode = new SEnc(SecredCode,PKreceive)} -> SenderAndRecipient!cipherScode -> 
+tau{cipherScode = new SEnc(SecredCode,Var_PKreceive)} -> SenderAndRecipient!cipherScode ->  // SecredCode,PKreceive
 tau{if(moneyS>=0 && TimeLock >= 0)
                       {moneySnew = moneyS - asset;}} -> 
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
@@ -85,8 +89,8 @@ SenderAndSourceChain!reclaim -> Skip;
                    
 
 recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
-RecipientAndSourcechain?Notification2 -> tau{decipherScode = new SDec(cipherScode)} ->
-tau{if(BurnAddress == asset && decipherScode == SecredCode && time<TimeLock)  //problem
+RecipientAndSourcechain?Notification2 -> tau{decipherScode = new SDec(cipherScode)} ->   // cipherScode
+tau{if(BurnAddress == asset && decipherScode == SecredCode && time<TimeLock)  // && decipherScode == SecredCode    Problem
       {moneyRnew = moneyR + asset;}} -> 
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> Skip;
 
@@ -96,21 +100,23 @@ RecipientAndSourcechain!Notification2 -> SourceChainAndEvent!Event1 -> SourceAnd
 SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> SourceChainAndEvent!Event3 -> Skip;
 
 
-DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4 -> DestinationAndDestinationMiner?TXmindNew -> 
+DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4.SecredCodeNew -> DestinationAndDestinationMiner?TXmindNew -> 
 SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
-SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> Miner1AndSourceMiner!Result -> 
-Miner2AndSourceMiner!Result -> Miner1AndSourceMiner?Proof_Of_Work_New -> Miner2AndSourceMiner?Proof_Of_Work_New -> CreateNewBlock -> SourceMinerAndEvent!NewBlockNotification ->
+SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> tau{Result = new Hash(cipherScodeNew)} ->
+Miner1AndSourceMiner!Result ->  Miner2AndSourceMiner!Result -> Miner1AndSourceMiner?Proof_Of_Work_New -> Miner2AndSourceMiner?Proof_Of_Work_New -> CreateNewBlock -> SourceMinerAndEvent!NewBlockNotification ->
 SourceChainAndSourceMiner!TXmind -> SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
 
-DestinationMiner() = DestinationAndDestinationMiner?Notification4 -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
+DestinationMiner() = DestinationAndDestinationMiner?Notification4.SecredCodeNew1 -> tau{if(moneyR >= asset){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
+Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> Miner1AndDestinationMiner?Proof_Of_WorkNew -> Miner2AndDestinationMiner!Proof_Of_WorkNew -> 
+CreateNewBlock -> DestinationMinerAndEvent!NewBlockNotification -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndSourceMiner!Proof_Of_Work -> Skip;
+Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndSourceMiner!Proof_Of_Work -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner!Proof_Of_Work -> Skip;
 
-Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndSourceMiner!Proof_Of_Work -> Skip;
+Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndSourceMiner!Proof_Of_Work -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner!Proof_Of_Work -> Skip;
 
-Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
+Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> DestinationMinerAndEvent?NewBlockNotificationNew -> DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
 
 
-protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner();
+protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2();
