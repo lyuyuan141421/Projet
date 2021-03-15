@@ -12,6 +12,8 @@
 #define LoginNewTransaction 7;
 #define CheckingBurnAssetTransaction 8;
 #define ReclaimCheck 8;
+#define N 3;
+#define Bill_Registration 0;
 
 
 // Keys exchange
@@ -36,15 +38,15 @@ channel Miner2AndSourceMiner 0;
 channel Miner1AndDestinationMiner 0;
 channel Miner2AndDestinationMiner 0;
 
-var SecredCode = 1;
+//var SecredCode = 1;
 var<SKey> SKsender = new SKey();
 var<PKey> PKsender = new PKey(SKsender); 
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
-// var<Noce> SecredCode = new Noce(i);
+var<Nonce> SecredCode = new Nonce();
 
-var<AEnc> cipherScode;                     
-var<ADec> decipherScode;
+var<SEnc> cipherScode;                     
+var<SDec> decipherScode;
 
 var moneyS = 10;
 var moneySnew;
@@ -54,6 +56,7 @@ var asset = 1;
 var BurnAddress = 0;   
 var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
+var NewBlock[N];
 
 var ExitTransaction;
 var going;
@@ -73,11 +76,13 @@ var Proof_Of_Work;
 var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
 var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 var Event3 = 0;
+var<PKey> Var_PKreceive;
+ 
 
 
 
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
-tau{cipherScode = new SEnc(SecredCode,Var_PKreceive)} -> SenderAndRecipient!cipherScode ->  // SecredCode,PKreceive
+tau{cipherScode = new SEnc(SecredCode,Var_PKreceive)} -> SenderAndRecipient!cipherScode ->  // SecredCode,PKreceive   Unity type?
 tau{if(moneyS>=0 && TimeLock >= 0)
                       {moneySnew = moneyS - asset;}} -> 
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
@@ -104,17 +109,17 @@ DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetN
 SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
-SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> tau{Result = new Hash(cipherScodeNew)} ->
-Miner1AndSourceMiner!Result ->  Miner2AndSourceMiner!Result -> Miner1AndSourceMiner?Proof_Of_Work_New -> Miner2AndSourceMiner?Proof_Of_Work_New -> CreateNewBlock -> SourceMinerAndEvent!NewBlockNotification ->
+SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
+tau{Result = new Hash(cipherScodeNew)} -> Miner1AndSourceMiner!Result ->  Miner2AndSourceMiner!Result -> CreateNewBlock -> SourceMinerAndEvent!NewBlockNotification -> 
 SourceChainAndSourceMiner!TXmind -> SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
 
 DestinationMiner() = DestinationAndDestinationMiner?Notification4.SecredCodeNew1 -> tau{if(moneyR >= asset){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
-Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> Miner1AndDestinationMiner?Proof_Of_WorkNew -> Miner2AndDestinationMiner!Proof_Of_WorkNew -> 
-CreateNewBlock -> DestinationMinerAndEvent!NewBlockNotification -> SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
+Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[0] = Bill_Registration;} -> DestinationMinerAndEvent!NewBlockNotification -> 
+SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndSourceMiner!Proof_Of_Work -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner!Proof_Of_Work -> Skip;
+Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[1] = 1;} -> Skip;  
 
-Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndSourceMiner!Proof_Of_Work -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner!Proof_Of_Work -> Skip;
+Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[2] = 1;} -> Skip;
 
 Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> DestinationMinerAndEvent?NewBlockNotificationNew -> DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
 
