@@ -51,12 +51,15 @@ var<SDec> decipherScode;
 var moneyS = 10;
 var moneySnew;
 var moneyR = 0;
-var moneyRnew = 10;
 var asset = 10;
 var BurnAddress = 0;   
 var Address = [BurnAddress, asset];
 var Encrypt = [SecredCode, cipherScode];
 var NewBlock[N];
+var moneyRnew = 10;
+var moneyRnew1 = 0;
+var moneyRnew2 = 0;
+var moneyRnew3 = 0;
 
 var ExitTransaction;
 var going;
@@ -77,6 +80,7 @@ var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
 var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 var Event3 = 0;
 var i = 0;
+var moneyS_enought = false;
 
  
 
@@ -85,7 +89,8 @@ var i = 0;
 sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> SenderAndRecipient?AddressNew.SecredCodeNew -> 
 tau{cipherScode = new SEnc(new Pair(PKreceive,SecredCode), SKsender);} -> SenderAndRecipient!cipherScode ->  // SecredCode,PKreceive   Unity type?
 tau{if(moneyS>0 && TimeLock > 0)
-                      {moneySnew = moneyS - asset;}} ->
+                      {moneySnew = moneyS - asset; 
+                       moneyS_enought = true;}} ->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
 tau{if(time>TimeLock)
        {reclaim = repeat;}
@@ -107,7 +112,7 @@ SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> SourceCh
 
 
 DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4.SecredCodeNew -> DestinationAndDestinationMiner?TXmindNew -> 
-SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
+SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> Sourc+eAndDestination?ReclaimCheckNew -> Skip;
 
 
 SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> SourceChainAndSourceMiner!TXmind ->  tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
@@ -130,8 +135,16 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 #assert protocol() deadlockfree;
 
-#define BurnAddressVerification (BurnAddress == 10);
-#assert protocol() reaches BurnAddressVerification;
 
-#define assetCheck (moneySnew == 0 && moneyRnew == 10);   //moneyS = 10  moneyR = 0
-#assert protocol() reaches assetCheck;
+
+#define BurnAddressVerification (BurnAddress == 10);
+#assert protocol() |= <>[] BurnAddressVerification;
+
+#define assetCheck (moneySnew == 0 && moneyRnew == 10 && moneyRnew1 == 0 && moneyRnew2 == 0 && moneyRnew3 == 0);   //moneyS = 10  moneyR = 0   //什么是正确的receive
+#assert protocol() |= <>[] assetCheck;
+
+#define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   // LTL的图 p93 (! t U b) /\ (<>t)
+#assert sender() reaches BurnbeforeClaim;
+
+#define sender_has_enought_Money (moneyS_enought == true);
+#assert protocol() reaches sender_has_no_enought_Money;
