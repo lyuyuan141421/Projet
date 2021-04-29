@@ -69,7 +69,7 @@ var TXID;
 
 var time = 1;
 var EntryTransaction;
-var reclaim = 0;
+var reclaim = false;
 var repeat = 0;
 var Miner_verification = 0;
 var Miner_verified_successfully;
@@ -81,6 +81,7 @@ var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 var Event3 = 0;
 var i = 0;
 var moneyS_enought = false;
+var moneySnewCheck = false;
 
  
 
@@ -90,13 +91,14 @@ sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?Var_PKreceive -> Se
 tau{cipherScode = new SEnc(new Pair(PKreceive,SecredCode), SKsender);} -> SenderAndRecipient!cipherScode ->  // SecredCode,PKreceive   Unity type?
 tau{if(moneyS>0 && TimeLock > 0)
                       {moneySnew = moneyS - asset; 
-                       moneyS_enought = true;}} ->
+                       moneyS_enought = true;
+                       moneySnewCheck = true;}} ->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
 tau{if(time>TimeLock)
-       {reclaim = repeat;}
+       {reclaim = true;}
     else
-       {reclaim = Going;}} -> 
-SenderAndSourceChain!reclaim -> Skip;
+       {reclaim = false;}} -> 
+SenderAndSourceChain!reclaim -> tau{if(moneyRnew == 0){moneySnew = moneySnew + asset;}} -> Skip;
                    
 
 recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
@@ -112,7 +114,7 @@ SenderAndSourceChain?reclaimNew -> SourceAndDestination!ReclaimCheck -> SourceCh
 
 
 DestinationChain() = RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4.SecredCodeNew -> DestinationAndDestinationMiner?TXmindNew -> 
-SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> Sourc+eAndDestination?ReclaimCheckNew -> Skip;
+SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?ReclaimCheckNew -> Skip;
 
 
 SourceMiner() = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> SourceChainAndSourceMiner!TXmind ->  tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
@@ -123,9 +125,9 @@ DestinationMiner() = DestinationAndDestinationMiner?Notification4.SecredCodeNew1
 Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[i] = Bill_Registration;i=i+3;} -> DestinationMinerAndEvent!NewBlockNotification -> 
 SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+1] = 1;} -> Miner1();  
+Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+1] = 1;} -> Skip;  
 
-Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+2] = 1;} -> Miner2();
+Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+2] = 1;} -> Skip;
 
 Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> DestinationMinerAndEvent?NewBlockNotificationNew -> 
 DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
@@ -135,16 +137,19 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 #assert protocol() deadlockfree;
 
-
-
-#define BurnAddressVerification (BurnAddress == 10);
+#define BurnAddressVerification (BurnAddress == 10 && moneySnew == 0);
 #assert protocol() |= <>[] BurnAddressVerification;
 
 #define assetCheck (moneySnew == 0 && moneyRnew == 10 && moneyRnew1 == 0 && moneyRnew2 == 0 && moneyRnew3 == 0);   //moneyS = 10  moneyR = 0   //什么是正确的receive
 #assert protocol() |= <>[] assetCheck;
 
-#define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   // LTL的图 p93 (! t U b) /\ (<>t)
-#assert sender() reaches BurnbeforeClaim;
+// #define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   // LTL的图 p93 (! t U b) /\ (<>t)
+#define MoneyCheck (moneySnewCheck == true);
+#define BurnAddressCheck (BurnAddress == 10);
+#assert protocol() |= [] (([] !MoneyCheck) || (!MoneyCheck U BurnAddressCheck));
 
 #define sender_has_enought_Money (moneyS_enought == true);
-#assert protocol() reaches sender_has_no_enought_Money;
+#assert protocol() reaches sender_has_enought_Money;
+
+#define Reclaim (reclaim == false && moneySnew == 0);
+#assert protocol() |= <>[] Reclaim;   
