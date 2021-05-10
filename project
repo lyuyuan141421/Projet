@@ -99,7 +99,7 @@ SenderAndSourceChain!reclaimResult -> tau{if(moneyRnew == 0){moneySnew = moneySn
 
 recipient() = SenderAndRecipient?Var_PKsender -> SenderAndRecipient!PKreceive -> SenderAndRecipient!Address.SecredCode -> SenderAndRecipient?cipherScodeNew -> 
 RecipientAndSourcechain?Notification2 -> tau{decipherScode = new SDec(cipherScodeNew,SKreceive);} ->   // cipherScode
-tau{if(BurnAddress == asset && time<TimeLock)  // && decipherScode == SecredCode    Problem
+tau{if(BurnAddress == asset && decipherScode == cipherScodeNew && time<TimeLock)  // && decipherScode == SecredCode    Problem
       {moneyRnew = moneyR + asset;}} ->
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> Skip;
 
@@ -163,5 +163,5 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 // #define MinerVerification (NewBlock == [0,0,0,0,0,0]);
 // #assert protocol() |= <>[] MinerVerification;
 
-#define assetCheck_Miner (Miner_verification == Miner_verified_successfully);
+#define assetCheck_Miner (Miner_verification == 1);
 #assert protocol() |= <>[] assetCheck_Miner;
