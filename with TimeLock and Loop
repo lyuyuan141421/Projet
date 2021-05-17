@@ -111,44 +111,47 @@ tau{if(BurnAddress == asset && decipherScode == cipherScodeNew)  // && decipherS
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> RecipientAndDestination?reclaimResult2 -> 
 tau{if(reclaimResult == true)
       {moneyRnew = moneyRnew - 0;}
-    else{moneyRnew = moneyRnew - asset;}} -> recipient(i) within[TimeLock]); 
+    else{moneyRnew = moneyRnew - asset;}} -> recipient(i) deadline[TimeLock]); 
 
 
 FakeRecipient(i) = SenderAndFakeRecipient?Var_PKsender1 -> SenderAndFakeRecipient!PKreceive -> PKcheck -> SenderAndFakeRecipient!Address.SecredCode -> 
 (tau{if(decipherScode != SecredCodeF) //&& time<TimeLock
     {fakerecipientHasNoTruePk = true;}
-    else{fakerecipientHasNoTruePk = false;}} -> Skip within[TimeLock]);
+    else{fakerecipientHasNoTruePk = false;}} -> Skip deadline[TimeLock]);
 
 
 SourceChain(i) = SenderAndSourceChain?BurnAddressNew.assetNew.cipherScodeNew.TimeLockNew -> SourceChainAndSourceMiner!Notification1.cipherScode -> SourceChainAndSourceMiner?TXmindNew -> 
 RecipientAndSourcechain!Notification2 -> SourceChainAndEvent!Event1 -> (SourceAndDestinationMiner?CheckingBurnAssetTransactionNew -> SourceChainAndSourceMiner!SKsender -> 
-SenderAndSourceChain?reclaimResult1 -> SourceAndDestination!reclaimResult1 -> SourceChainAndEvent!Event3 -> SourceChain(i) within[TimeLock]);
+SenderAndSourceChain?reclaimResult1 -> SourceAndDestination!reclaimResult1 -> SourceChainAndEvent!Event3 -> SourceChain(i) deadline[TimeLock]);
 
 
 DestinationChain(i) = (RecipientAndDestination?BurnAddressNew.SecredCodeNew.assetNew -> DestinationAndDestinationMiner!Notification4.SecredCodeNew -> DestinationAndDestinationMiner?TXmindNew -> 
 SenderAndDestination!Notification3 -> RecipientAndDestination!Notification3 -> DestinationAndEvent!Event2 -> DestinationAndSourceMiner!SKreceive -> SourceAndDestination?reclaimResult2 ->
- RecipientAndDestination!reclaimResult2 -> DestinationChain(i) within[TimeLock]);
+ RecipientAndDestination!reclaimResult2 -> DestinationChain(i) deadline[TimeLock]);
 
 
 SourceMiner(i) = SourceChainAndSourceMiner?Notification1.cipherScodeNew -> SourceChainAndSourceMiner!TXmind ->  tau{if(moneyS >= 0){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
 tau{Result = new Hash(cipherScodeNew)} -> Miner1AndSourceMiner!Result ->  Miner2AndSourceMiner!Result -> CreateNewBlock -> SourceMinerAndEvent!NewBlockNotification -> 
-(SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> SourceMiner(i) within[TimeLock]);
+(SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> SourceMiner(i) deadline[TimeLock]);
 
 DestinationMiner(i) = (DestinationAndDestinationMiner?Notification4.SecredCodeNew1 -> tau{if(moneyRnew >= asset && BurnAddress == 9 ){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
 Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[n] = Bill_Registration;} -> DestinationMinerAndEvent!NewBlockNotification -> 
-SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind -> DestinationMiner(i) within[TimeLock]);
+SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind -> DestinationMiner(i) deadline[TimeLock]);
 
-Miner1(i) = (Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+1] = 1;} -> Miner1(i) within[TimeLock]);  
+Miner1(i) = (Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+1] = 1;} -> Miner1(i) deadline[TimeLock]);  
 
-Miner2(i) = (Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+2] = 1; n++} -> Miner2(i) within[TimeLock]);
+Miner2(i) = (Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+2] = 1; n++} -> Miner2(i) deadline[TimeLock]);
 
 Event(i) = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> (DestinationMinerAndEvent?NewBlockNotificationNew -> 
-DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Event(i) within[TimeLock]);
-
+DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Event(i) deadline[TimeLock]);
 // ReclaimProcess(i) = redo -> protocol();
+protocol() = sender(10) || recipient(10) || SourceChain(10) || DestinationChain(10) || SourceMiner(10) || Event(10) || DestinationMiner(10) || Miner1(10) || Miner2(10) ||FakeRecipient(10); //||| ReclaimProcess(10);
+
+ReclaimProcess() = if(moneySnew != 1 && moneyRnew != 9){protocol()};
+
+RECLAIM() = protocol() || ReclaimProcess();
 
 
-protocol() = sender(10) || recipient(10) || SourceChain(10) || DestinationChain(10) || SourceMiner(10) || Event(10) || DestinationMiner(10) || Miner1(10) || Miner2(10) ||FakeRecipient(10);
 
 #assert protocol() deadlockfree;
 
