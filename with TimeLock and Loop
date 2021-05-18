@@ -50,9 +50,9 @@ var<Nonce> SecredCodeF = new Nonce();
 var<SEnc> cipherScode;                     
 var<SDec> decipherScode;
 
-var TimeLockEnough = 2;
-var TimeLockNotEnougt = 0;
-#define TimeLock 2;
+var TimeLockEnough = 4;
+var TimeLockNotEnougt = 0; // or 1,2
+#define TimeLock 4;
 
 
 var moneyS = 10;
@@ -97,9 +97,9 @@ tau{if(moneyS>asset && TimeLock > 0)
                        moneySnewCheck = true;}} -> tau{if(moneySnew >= 0){moneyS_enought = true;}}->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
 tau{if(TimeLock == TimeLockEnough)
-       {reclaimResult = true;}
+       {reclaimResult = false;}
     else
-       {reclaimResult = false;
+       {reclaimResult = true;
         moneySnew = moneySnew + asset;}} ->
 SenderAndSourceChain!reclaimResult -> sender(i);
                    
@@ -109,7 +109,7 @@ RecipientAndSourcechain?Notification2 -> (tau{decipherScode = new SDec(cipherSco
 tau{if(BurnAddress == asset && decipherScode == cipherScodeNew)  // && decipherScode == SecredCode    Problem && time<TimeLock
       {moneyRnew = moneyR + asset;}} ->
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> RecipientAndDestination?reclaimResult2 -> 
-tau{if(reclaimResult == true)
+tau{if(reclaimResult == false)
       {moneyRnew = moneyRnew - 0;}
     else{moneyRnew = moneyRnew - asset;}} -> recipient(i) deadline[TimeLock]); 
 
@@ -145,7 +145,7 @@ Miner2(i) = (Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDe
 Event(i) = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> (DestinationMinerAndEvent?NewBlockNotificationNew -> 
 DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Event(i) deadline[TimeLock]);
 // ReclaimProcess(i) = redo -> protocol();
-protocol() = sender(10) || recipient(10) || SourceChain(10) || DestinationChain(10) || SourceMiner(10) || Event(10) || DestinationMiner(10) || Miner1(10) || Miner2(10) ||FakeRecipient(10); //||| ReclaimProcess(10);
+protocol() = sender(3) || recipient(3) || SourceChain(3) || DestinationChain(3) || SourceMiner(3) || Event(3) || DestinationMiner(3) || Miner1(3) || Miner2(3) ||FakeRecipient(3); //||| ReclaimProcess(10);
 
 ReclaimProcess() = if(moneySnew != 1 && moneyRnew != 9){protocol()};
 
@@ -158,14 +158,14 @@ RECLAIM() = protocol() || ReclaimProcess();
 #define BurnAddressVerification (BurnAddress == 9 && moneySnew == 1);
 #assert protocol() |= <>[] BurnAddressVerification;
 
-#define assetCheck (moneySnew == 1 && moneyRnew == 9 && fakerecipientHasNoTruePk == true);   //moneyS = 10  moneyR = 0   //什么是正确的receive
+#define assetCheck (moneySnew == 1 && moneyRnew == 9 && fakerecipientHasNoTruePk == true);   
 #assert protocol() |= <>[] assetCheck;
 
 #define FakeRecieveCheck (fakerecipientHasNoTruePk == true && decipherScode != SecredCode);
 #assert protocol() |= <>[] FakeRecieveCheck;
 
 
-// #define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   // LTL的图 p93 (! t U b) /\ (<>t)
+// #define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   
 #define MoneyCheck (moneySnewCheck == true);
 #define BurnAddressCheck (BurnAddress == 10);
 #assert protocol() |= [] (([] !MoneyCheck) || (!MoneyCheck U BurnAddressCheck));
@@ -173,7 +173,7 @@ RECLAIM() = protocol() || ReclaimProcess();
 #define sender_has_enought_Money (moneyS_enought == true);  
 #assert protocol() reaches sender_has_enought_Money;
 
-#define Reclaim (reclaimResult == true && moneySnew == 1);
+#define Reclaim (reclaimResult == true && moneySnew != 1);
 #assert protocol() |= <>[] Reclaim;
 
 // #define MinerVerification (NewBlock == [0,0,0,0,0,0]);
