@@ -74,7 +74,7 @@ var Proof_Of_Work;
 var Event1 = [BurnAddress, SecredCode, TimeLock, asset];
 var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 var Event3 = 0;
-var i = 0;
+var n = 0;
 
 var moneyS_enought = false;
 var moneySnewCheck = false;
@@ -91,9 +91,9 @@ tau{if(moneyS>asset && TimeLock > 0)
                        moneySnewCheck = true;}} -> tau{if(moneySnew >= 0){moneyS_enought = true;}}->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
 tau{if(time>TimeLock)
-       {reclaimResult = true;}
+       {reclaimResult = false;}
     else
-       {reclaimResult = false;}} -> 
+       {reclaimResult = true;}} -> 
 SenderAndSourceChain!reclaimResult -> tau{if(moneyRnew == 0){moneySnew = moneySnew + asset;}} -> Skip;
                    
 
@@ -124,12 +124,12 @@ tau{Result = new Hash(cipherScodeNew)} -> Miner1AndSourceMiner!Result ->  Miner2
 SourceChainAndSourceMiner?SKsenderNew -> DestinationAndSourceMiner?SKreceiveNew -> Skip;
 
 DestinationMiner() = DestinationAndDestinationMiner?Notification4.SecredCodeNew1 -> tau{if(moneyRnew >= asset){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
-Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[i] = Bill_Registration;} -> DestinationMinerAndEvent!NewBlockNotification -> 
+Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[n] = Bill_Registration;} -> DestinationMinerAndEvent!NewBlockNotification -> 
 SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind ->  Skip;
 
-Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+1] = 1;} -> Skip;  
+Miner1() = Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+1] = 1;} -> Skip;  
 
-Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[i+2] = 1; i=i+3;} -> Skip;
+Miner2() = Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+2] = 1; n++} -> Skip;
 
 Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> DestinationMinerAndEvent?NewBlockNotificationNew -> 
 DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip;
@@ -139,29 +139,29 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 #assert protocol() deadlockfree;
 
-#define BurnAddressVerification (BurnAddress == 9 && moneySnew == 1);
+#define BurnAddressVerification (BurnAddress == 9 && moneySnew == 1); // Unspendability
 #assert protocol() |= <>[] BurnAddressVerification;
 
-#define assetCheck (moneySnew == 1 && moneyRnew == 9 && fakerecipientHasNoTruePk == true);   //moneyS = 10  moneyR = 0   //什么是正确的receive
-#assert protocol() |= <>[] assetCheck;
+#define assetCheck (moneySnew == 1 && moneyRnew == 9 && fakerecipientHasNoTruePk == true); 
+#assert protocol() |= <>[] assetCheck;  // Security
 
-#define FakeRecieveCheck (fakerecipientHasNoTruePk == true && decipherScode != SecredCode);
+#define FakeRecieveCheck (fakerecipientHasNoTruePk == true && decipherScode != SecredCode); // Correctness
 #assert protocol() |= <>[] FakeRecieveCheck;
 
 
 // #define BurnbeforeClaim (BurnAddress == 10); // (!(moneySnew == 0) U BurnAddress/\(<> (moneySnew == 0)))   // LTL的图 p93 (! t U b) /\ (<>t)
 #define MoneyCheck (moneySnewCheck == true);
 #define BurnAddressCheck (BurnAddress == 10);
-#assert protocol() |= [] (([] !MoneyCheck) || (!MoneyCheck U BurnAddressCheck));
+#assert protocol() |= [] (([] !MoneyCheck) || (!MoneyCheck U BurnAddressCheck)); // Burn before claim
 
-#define sender_has_enought_Money (moneyS_enought == true);  
+#define sender_has_enought_Money (moneyS_enought == true);  // Ownership
 #assert protocol() reaches sender_has_enought_Money;
 
-#define Reclaim (reclaimResult == false && moneySnew == 1);
-#assert protocol() |= <>[] Reclaim;
+// #define Reclaim (reclaimResult == false && moneySnew != 1);
+// #assert protocol() |= <>[] Reclaim;
 
 // #define MinerVerification (NewBlock == [0,0,0,0,0,0]);
 // #assert protocol() |= <>[] MinerVerification;
 
 #define assetCheck_Miner (Miner_verification == 1);
-#assert protocol() |= <>[] assetCheck_Miner;
+#assert protocol() |= <>[] assetCheck_Miner; 
