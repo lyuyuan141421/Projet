@@ -96,9 +96,9 @@ tau{if(moneyS>asset && TimeLock > 0)
                        moneySnewCheck = true;}} -> tau{if(moneySnew >= 0){moneyS_enought = true;}}->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
 tau{if(TimeLock == TimeLockEnough)
-       {reclaimResult = true;}
+       {reclaimResult = false;}
     else
-       {reclaimResult = false;
+       {reclaimResult = true;
         moneySnew = moneySnew + asset;}} ->
 SenderAndSourceChain!reclaimResult -> Skip;
                    
@@ -108,7 +108,7 @@ RecipientAndSourcechain?Notification2 -> tau{decipherScode = new SDec(cipherScod
 tau{if(BurnAddress == asset && decipherScode == cipherScodeNew)  // && decipherScode == SecredCode    Problem && time<TimeLock
       {moneyRnew = moneyR + asset;}} ->
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> RecipientAndDestination?reclaimResult2 -> 
-tau{if(reclaimResult == true)
+tau{if(reclaimResult == false)
       {moneyRnew = moneyRnew - 0;}
     else{moneyRnew = moneyRnew - asset;}} -> Skip deadline[TimeLock]));
 
@@ -172,7 +172,7 @@ RECLAIM() = protocol() || ReclaimProcess();
 #define sender_has_enought_Money (moneyS_enought == true);  
 #assert protocol() reaches sender_has_enought_Money;
 
-#define Reclaim (reclaimResult == true && moneySnew == 1);
+#define Reclaim (reclaimResult == false && moneySnew != 1);
 #assert protocol() |= <>[] Reclaim;
 
 // #define MinerVerification (NewBlock == [0,0,0,0,0,0]);
