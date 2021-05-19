@@ -53,7 +53,7 @@ var<SDec> decipherScode;
 var TimeLockEnough = 4;
 var TimeLockNotEnougt = 0; // or 1,2
 #define TimeLock 4;
-
+var Pn = 3;
 
 var moneyS = 10;
 var moneySnew;
@@ -81,6 +81,7 @@ var Event2 = [TXmind, BurnAddress, SecredCode, TimeLock, asset];
 var Event3 = 0;
 var n = 0;
 
+
 var moneyS_enought = false;
 var moneySnewCheck = false;
 var fakerecipientHasNoTruePk = false;
@@ -96,7 +97,7 @@ tau{if(moneyS>asset && TimeLock > 0)
                       {moneySnew = moneyS - asset; 
                        moneySnewCheck = true;}} -> tau{if(moneySnew >= 0){moneyS_enought = true;}}->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
-tau{if(TimeLock == TimeLockEnough)
+tau{if(Pn <= TimeLock)
        {reclaimResult = false;}
     else
        {reclaimResult = true;
@@ -111,7 +112,7 @@ tau{if(BurnAddress == asset && decipherScode == cipherScodeNew)  // && decipherS
 RecipientAndDestination!BurnAddress.SecredCode.asset -> RecipientAndDestination?Notification3 -> RecipientAndDestination?reclaimResult2 -> 
 tau{if(reclaimResult == false)
       {moneyRnew = moneyRnew - 0;}
-    else{moneyRnew = moneyRnew - asset;}} -> recipient(i) deadline[TimeLock]); 
+    else{moneyRnew = moneyRnew - asset;}} -> recipient(i) deadline[TimeLock]);  // timeout [TimeLock] (ResetProcessTime -> ReclaimProcess1(i))
 
 
 FakeRecipient(i) = SenderAndFakeRecipient?Var_PKsender1 -> SenderAndFakeRecipient!PKreceive -> PKcheck -> SenderAndFakeRecipient!Address.SecredCode -> 
@@ -143,13 +144,13 @@ Miner1(i) = (Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDe
 Miner2(i) = (Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+2] = 1; n++} -> Miner2(i) deadline[TimeLock]);
 
 Event(i) = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> (DestinationMinerAndEvent?NewBlockNotificationNew -> 
-DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Event(i) deadline[TimeLock]);
-// ReclaimProcess(i) = redo -> protocol();
-protocol() = sender(3) || recipient(3) || SourceChain(3) || DestinationChain(3) || SourceMiner(3) || Event(3) || DestinationMiner(3) || Miner1(3) || Miner2(3) ||FakeRecipient(3); //||| ReclaimProcess(10);
+DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Event(i)) interrupt[TimeLock] ReclaimProcess1(i);
 
-ReclaimProcess() = if(moneySnew != 1 && moneyRnew != 9){protocol()};
+protocol() = sender(Pn) || recipient(Pn) || SourceChain(Pn) || DestinationChain(Pn) || SourceMiner(Pn) || Event(Pn) || DestinationMiner(Pn) || Miner1(Pn) || Miner2(Pn) ||FakeRecipient(Pn) || ReclaimProcess1(Pn);
 
-RECLAIM() = protocol() || ReclaimProcess();
+
+ReclaimProcess1(i) = ResetProcessTime -> tau{if(Pn >= TimeLock){moneySnew = moneyS; moneyRnew = moneyR; Pn = Pn - 1;}
+                                            else{Pn = Pn;}} -> Event(i);                                       
 
 
 
