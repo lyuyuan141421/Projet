@@ -95,7 +95,7 @@ tau{if(moneyS>asset && TimeLock > 0)
                       {moneySnew = moneyS - asset; 
                        moneySnewCheck = true;}} -> tau{if(moneySnew >= 0){moneyS_enought = true;}}->
 tau{BurnAddress = BurnAddress + asset;} -> SenderAndSourceChain!BurnAddress.asset.cipherScode.TimeLock -> SenderAndDestination?Notification3 ->
-tau{if(TimeLock == TimeLockEnough)
+tau{if(TimeLock <= TimeLockEnough)
        {reclaimResult = false;}
     else
        {reclaimResult = true;
@@ -135,20 +135,23 @@ tau{Result = new Hash(cipherScodeNew)} -> Miner1AndSourceMiner!Result ->  Miner2
 
 DestinationMiner() = (DestinationAndDestinationMiner?Notification4.SecredCodeNew1 -> tau{if(moneyRnew >= asset && BurnAddress == 9 ){Miner_verification = Miner_verified_successfully;}} -> Hash_calculation -> 
 Miner1AndDestinationMiner!Result -> Miner2AndDestinationMiner!Result -> tau{NewBlock[n] = Bill_Registration;} -> DestinationMinerAndEvent!NewBlockNotification -> 
-SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind -> Skip deadline[TimeLock]);
+SourceAndDestinationMiner!CheckingBurnAssetTransaction -> DestinationAndDestinationMiner!TXmind -> Skip deadline[TimeLock]); // interrupt[TimeLock] ReclaimProcess1();
 
 Miner1() = (Miner1AndSourceMiner?ResultNew -> ResultVerification -> Miner1AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+1] = 1;} -> Skip deadline[TimeLock]);  
 
 Miner2() = (Miner2AndSourceMiner?ResultNew -> ResultVerification -> Miner2AndDestinationMiner?ResultNew -> ResultVerification -> tau{NewBlock[n+2] = 1; n++} -> Skip deadline[TimeLock]);
 
 Event() = SourceMinerAndEvent?NewBlockNotificationNew -> SourceChainAndEvent?Event1New -> (DestinationMinerAndEvent?NewBlockNotificationNew -> 
-DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip deadline[TimeLock]);
+DestinationAndEvent?Event2New -> SourceChainAndEvent?Event3New -> Skip) deadline[TimeLock];
 
-protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2() ||FakeRecipient(); // ReclaimProcess();
+protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2() ||FakeRecipient() ||| ReclaimProcess1();
 
-ReclaimProcess() = if(moneySnew != 1 && moneyRnew != 9){protocol()};
+ReclaimProcess1() = ResetProcessTime -> tau{if(TimeLock > TimeLockEnough){moneySnew = moneyS; moneyRnew = moneyR;}
+                                            else{moneySnew = moneySnew;
+                                                 moneyRnew = moneyRnew;}} -> Skip;
+
                    
-RECLAIM() = protocol() || ReclaimProcess();
+//RECLAIM() = protocol() || ReclaimProcess();
 
 
 
@@ -172,7 +175,7 @@ RECLAIM() = protocol() || ReclaimProcess();
 #define sender_has_enought_Money (moneyS_enought == true);  
 #assert protocol() reaches sender_has_enought_Money;
 
-#define Reclaim (reclaimResult == false && moneySnew != 1);
+#define Reclaim (reclaimResult == true && moneySnew != 1);
 #assert protocol() |= <>[] Reclaim;
 
 // #define MinerVerification (NewBlock == [0,0,0,0,0,0]);
