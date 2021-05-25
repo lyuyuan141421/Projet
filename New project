@@ -1,0 +1,87 @@
+#import "Lib_v0+equal+know";
+
+
+channel SenderAndRecipient 0;
+channel SenderAndSourceChain 0;
+channel RecipientAndSourcechain 0;
+channel SourceChainAndSourceMiner 0;
+channel DestinationAndSourceMiner 0;
+channel SourceAndDestination 0;
+channel DestinationAndDestinationMiner 0;
+channel SourceAndDestinationMiner 0;
+channel SenderAndDestination 0;
+channel RecipientAndDestination 0;
+channel SourceMinerAndEvent 0;
+channel DestinationMinerAndEvent 0;
+channel SenderAndFakeRecipient 0;
+
+channel SourceChainAndEvent 0;
+channel DestinationAndEvent 0;
+
+channel Miner1AndSourceMiner 0;
+channel Miner2AndSourceMiner 0;
+channel Miner1AndDestinationMiner 0;
+channel Miner2AndDestinationMiner 0;
+
+var<SKey> SKsender = new SKey();
+var<PKey> PKsender = new PKey(SKsender); 
+var<SKey> SKreceive = new SKey();
+var<PKey> PKreceive = new PKey(SKreceive); 
+var<Nonce> Message = new Nonce();
+
+var<SEnc> cipherScode;                     
+var<SDec> decipherScode;
+
+var moneyS = 10;
+var moneySnew;
+var moneyR = 0;
+var moneyRnew = 0;
+
+var asset = 9;
+var BurnAddress = 0;   
+
+var Address = [BurnAddress, asset];
+
+var Event1 = [BurnAddress, Message, asset];
+var Event2 = [BurnAddress, Message, asset];
+var Event3 = 0;
+
+var digital_signature;
+var encrypted_inf;
+var decrypted_inf;
+
+// digital_signature = Digital_Signature{new Pair(PKreceive,Message)} -> Skip;
+
+
+sender() = SenderAndRecipient!PKsender -> SenderAndRecipient?PKreceive1 -> SenderAndRecipient?SKreceive1.BurnAddress1 -> 
+Digital_Signature{digital_signature = new Pair(PKreceive1,Message);} -> Encrypted_inf{encrypted_inf = new SEnc(new Pair(PKreceive1,Message), SKsender);} -> 
+SenderAndSourceChain!encrypted_inf.asset.BurnAddress1.digital_signature.PKsender -> Skip();
+
+SourceChain() = SenderAndSourceChain?encrypted_inf1.asset1.BurnAddress2.digital_signature1.PKsender1 -> 
+ExitTransaction{if(digital_signature1==digital_signature && PKsender1==PKsender && moneyS>=asset1)
+                  {moneySnew = moneyS - asset1;}} -> 
+Burn_Transaction{if(moneySnew <= moneyS)
+                    {BurnAddress = BurnAddress + asset1;}} -> SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 -> SourceChainAndEvent!Event1 -> Skip();
+
+DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2 ->
+EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature)
+                 {decrypted_inf = new SDec(encrypted_inf2,SKsender);}} ->
+AssetCreate{if(encrypted_inf == encrypted_inf)
+               {moneyRnew = moneyR + asset2;}} -> RecipientAndDestination!moneyRnew ->  Skip;
+
+recipient() = SenderAndRecipient?PKsender1 -> SenderAndRecipient!PKreceive -> SenderAndRecipient!SKreceive.BurnAddress -> RecipientAndDestination?moneyRnew1 -> Skip();
+
+SourceMiner() = Skip;
+
+DestinationMiner() = Skip;
+
+Miner1() = Skip;
+
+Miner2() = Skip;
+
+Event() = SourceChainAndEvent?Event1new -> Skip;
+
+protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2();
+
+
+#assert protocol() deadlockfree;
