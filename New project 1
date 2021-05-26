@@ -1,5 +1,11 @@
 #import "Lib_v0+equal+know";
-
+#define TimeLock 5;
+#define N 4;
+#define Notification1 10;
+#define Notification2 11;
+#define Notification3 12;
+#define Go 1;
+#define Off 0;
 
 channel SenderAndRecipient 0;
 channel SenderAndSourceChain 0;
@@ -40,19 +46,23 @@ var moneyRnew = 0;
 var asset = 9;
 var BurnAddress = 0;   
 
-var Address = [BurnAddress, asset];
+var AddressR = [PKreceive, SKreceive, moneyS];
+var AddressS = [PKsender, SKsender, moneyR];
 
-var Event1 = [BurnAddress, Message, asset];
-var Event2 = [BurnAddress, Message, asset];
+var Event1 = [PKreceive, Message, asset];
+var Event2 = [PKsender, Message, asset];
 var Event3 = 0;
+
+var moneyS_enought = false;
+var moneySnewCheck = false;
+var fakerecipientHasNoTruePk = false;
+var reclaimResult = false;
+var resultVerification1 = false;
+var resultVerification2 = false;
 
 var digital_signature;
 var encrypted_inf;
 var decrypted_inf;
-
-var resultVerification1 = false;
-var resultVerification2 = false;
-
 
 // digital_signature = Digital_Signature{new Pair(PKreceive,Message)} -> Skip;
 
