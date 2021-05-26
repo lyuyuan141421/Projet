@@ -80,14 +80,17 @@ ExitTransaction{if(digital_signature1==digital_signature && PKsender1==PKsender 
 Burn_Transaction{if(moneySnew <= moneyS)     //Burn_Transaction
                     {BurnAddress = BurnAddress + asset1;}} -> 
 SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1  -> 
-SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 -> SourceChain(); //-> SourceChainAndEvent!Event1
+SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 -> 
+SourceChain();
 
 DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2 ->
-EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature)  // EntryTransaction
+EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && 
+digital_signature2 == digital_signature)  // EntryTransaction
                  {decrypted_inf = new SDec(encrypted_inf2,SKsender);}} ->
 AssetCreate{if(decrypted_inf == encrypted_inf2)  // AssetCreate
                {moneyRnew = moneyR + asset2;}} -> 
-RecipientAndDestination!moneyRnew -> DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 -> DestinationChain();
+RecipientAndDestination!moneyRnew -> DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 
+-> DestinationChain();
 
 recipient() = SenderAndRecipient?PKsender1 -> 
 SenderAndRecipient!PKreceive -> 
