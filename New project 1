@@ -86,7 +86,7 @@ Burn_Transaction{if(moneySnew <= moneyS)     //Burn_Transaction
 SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 ->
 SourceChainAndSourceMiner?MinerResultVerification1new ->
 SourceChainAndEvent!Event1 ->
-SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1.MinerResultVerification1new  ->  SourceChain(); //-> SourceChainAndEvent!Event1
+SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1.MinerResultVerification1new  ->  SourceChain();  // interrupt[2] reclaimS(); //-> SourceChainAndEvent!Event1
 
 // FakeDsetinationChain() =  SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2.MinerResultVerification1new1 ->
 // EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
@@ -106,7 +106,7 @@ AssetCreate{if(decrypted_inf == digital_signature2)  // AssetCreate
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
 DestinationAndEvent!Event2 ->
-RecipientAndDestination!moneyRnew.MinerResultVerification2new -> DestinationChain();
+RecipientAndDestination!moneyRnew.MinerResultVerification2new -> DestinationChain(); // interrupt[2] reclaimD();
 
 recipient() = SenderAndRecipient?PKsender1 -> 
 SenderAndRecipient!PKreceive -> 
@@ -123,7 +123,10 @@ DestinationAndDestinationMiner!MinerResultVerification2 -> DestinationMiner();
 
 Event() = SourceChainAndEvent?Event1new -> DestinationAndEvent?Event2new -> Event();
 
-protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner();  // || Miner1() || Miner2();
+// reclaimS() = redo -> SourceChain();
+// reclaimD() = redo -> DestinationChain();
+
+protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner(); //|| reclaimS() || reclaimD();  // || Miner1() || Miner2();
 
 
 #assert protocol() deadlockfree;
