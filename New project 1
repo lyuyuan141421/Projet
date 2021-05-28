@@ -21,6 +21,7 @@ channel SourceMinerAndEvent 0;
 channel DestinationMinerAndEvent 0;
 channel SenderAndFakeRecipient 0;
 
+
 channel SourceChainAndEvent 0;
 channel DestinationAndEvent 0;
 
@@ -49,16 +50,16 @@ var BurnAddress = 0;
 var AddressR = [PKreceive, SKreceive, moneyS];
 var AddressS = [PKsender, SKsender, moneyR];
 
-var Event1 = [PKreceive, Message, asset];
-var Event2 = [PKsender, Message, asset];
+var Event1 = [PKsender, Message, asset];
+var Event2 = [PKreceive, Message, asset];
 var Event3 = 0;
 
 var moneyS_enought = false;
 var moneySnewCheck = false;
 var fakerecipientHasNoTruePk = false;
 var reclaimResult = false;
-var resultVerification1 = false;
-var resultVerification2 = false;
+var MinerResultVerification1 = false;
+var MinerResultVerification2 = false;
 
 var HashResult;
 var Math_problem;
@@ -69,7 +70,6 @@ var decrypted_inf;
 
 // digital_signature = Digital_Signature{new Pair(PKreceive,Message)} -> Skip;
 
-
 sender() = SenderAndRecipient!PKsender -> 
 SenderAndRecipient?PKreceive1 -> 
 SenderAndRecipient?BurnAddress1 -> 
@@ -77,39 +77,48 @@ Digital_Signature{digital_signature = new Pair(PKsender,Message);} ->
 Encrypted_inf{encrypted_inf = new AEnc(new Pair(PKsender,Message), PKreceive);} -> 
 SenderAndSourceChain!encrypted_inf.asset.BurnAddress1.digital_signature.PKsender -> sender();
 
+
 SourceChain() = SenderAndSourceChain?encrypted_inf1.asset1.BurnAddress2.digital_signature1.PKsender1 -> 
 ExitTransaction{if(digital_signature1==digital_signature && PKsender1==PKsender && moneyS>=asset1)    //ExitTransaction
                   {moneySnew = moneyS - asset1;}} -> 
 Burn_Transaction{if(moneySnew <= moneyS)     //Burn_Transaction
                     {BurnAddress = BurnAddress2 + asset1;}} -> 
-SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1  -> 
-SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 -> SourceChain(); //-> SourceChainAndEvent!Event1
+SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 ->
+SourceChainAndSourceMiner?MinerResultVerification1new ->
+SourceChainAndEvent!Event1 ->
+SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1.MinerResultVerification1new  ->  SourceChain(); //-> SourceChainAndEvent!Event1
 
 // FakeDsetinationChain() =  SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2 ->
 // EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature)  // EntryTransaction
 //                 {decrypted_inf = new ADec(encrypted_inf2,SKreceiveFake);}} ->
 // AssetCreate{if(decrypted_inf != digital_signature2)  // AssetCreate
-//               {fakerecipientHasNoTruePk = true;}} -> Skip;
+//               {fakerecipientHasNoTruePk = true;}
+//                else{moneyRnew = moneyR + asset2;}} -> Skip;
 
-DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2 ->
-EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature)  // EntryTransaction
+DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2.MinerResultVerification1new1 ->
+EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);}} ->
 AssetCreate{if(decrypted_inf == digital_signature2)  // AssetCreate
-               {moneyRnew = moneyR + asset2;}} -> 
-RecipientAndDestination!moneyRnew -> DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 -> DestinationChain();
+               {moneyRnew = moneyR + asset2;}} ->
+DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
+DestinationAndDestinationMiner?MinerResultVerification2new ->
+DestinationAndEvent!Event2 ->
+RecipientAndDestination!moneyRnew.MinerResultVerification2new -> DestinationChain();
 
 recipient() = SenderAndRecipient?PKsender1 -> 
 SenderAndRecipient!PKreceive -> 
 SenderAndRecipient!BurnAddress -> 
-RecipientAndDestination?moneyRnew1 -> recipient();
+RecipientAndDestination?moneyRnew1.MinerResultVerification2new1 ->
+MoneyGet{if(MinerResultVerification2new1 == true){moneyRnew = moneyRnew1;}} -> recipient();
 
 SourceMiner() = SourceChainAndSourceMiner?moneySnew11.BurnAddress11.encrypted_inf111.digital_signature111.asset111 -> 
-ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){resultVerification1 = true;}} -> SourceMiner();
+ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){MinerResultVerification1 = true;}} -> SourceChainAndSourceMiner!MinerResultVerification1 -> SourceMiner();
 
 DestinationMiner() = DestinationAndDestinationMiner?decrypted_inf1.encrypted_inf21 ->
-ResultVerification{if(decrypted_inf1 == encrypted_inf21){resultVerification2 = true;}} -> DestinationMiner();
+ResultVerification{if(decrypted_inf1 == encrypted_inf21){MinerResultVerification2 = true;}} -> 
+DestinationAndDestinationMiner!MinerResultVerification2 -> DestinationMiner();
 
-Event() = Skip;
+Event() = SourceChainAndEvent?Event1new -> DestinationAndEvent?Event2new -> Event();
 
 protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner();  // || Miner1() || Miner2();
 
