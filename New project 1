@@ -39,10 +39,13 @@ var<Nonce> Message = new Nonce();
 var moneyS = 100;
 var moneySnew;
 var moneyR = 0;
-var moneyRnew = 0;
-
+var moneyRnew ;
 var asset = 10;
-var BurnAddress = 0;   
+var BurnAddress = 0;
+var FakeReceiverMoney = 0;
+var moneyS_NoEnought = false;
+var fakerecipientHasNoTruePk = false;
+
 
 var AddressR = [PKreceive, SKreceive, moneyS];
 var AddressS = [PKsender, SKsender, moneyR];
@@ -51,9 +54,7 @@ var event1 = [PKsender, Message, asset];
 var event2 = [PKreceive, Message, asset];
 var event3 = 0;
 
-var moneyS_enought = false;
 var moneySnewCheck = false;
-var fakerecipientHasNoTruePk = false;
 var reclaimResult = false;
 var MinerResultVerification1 = false;
 var MinerResultVerification2 = false;
@@ -82,9 +83,10 @@ Encrypted_inf{encrypted_inf = new AEnc(new Pair(PKsender,Message), PKreceive);} 
 SenderAndSourceChain!encrypted_inf.asset.BurnAddress1.digital_signature.PKsender -> Skip();
 
 SourceChain() = SenderAndSourceChain?encrypted_inf1.asset1.BurnAddress2.digital_signature1.PKsender1 -> 
-ExitTransaction{if(digital_signature1==digital_signature && PKsender1==PKsender && moneyS>=asset1)    //ExitTransaction
-                  {moneySnew = moneyS - asset1;}} -> 
-Burn_Transaction{if(moneySnew <= moneyS)     //Burn_Transaction
+ExitTransaction{if(digital_signature1==digital_signature && PKsender1==PKsender && moneyS >= asset1)    //ExitTransaction
+                  {moneySnew = moneyS - asset1;}
+                  else{moneyS_NoEnought = true;}} ->
+Burn_Transaction{if(moneySnew < moneyS && moneySnew > 0)     //Burn_Transaction
                     {BurnAddress = BurnAddress2 + asset1;
                      moneyS = moneySnew;}} ->
 SourceChainAndSourceMiner!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1 ->
@@ -103,7 +105,7 @@ SourceChainAndSourceMiner?MinerResultVerification1new ->
 SourceChainAndEvent!event1 ->
 SourceAndDestination!moneySnew.BurnAddress.encrypted_inf1.digital_signature1.asset1.MinerResultVerification1new  ->  Skip();
 
-//FakeDsetinationChain() =  SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2.MinerResultVerification1new1 ->
+//FakeDsetinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2.MinerResultVerification1new1 ->
 //EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
 //                 {decrypted_inf = new ADec(encrypted_inf2,SKreceiveFake);}} ->
 //AssetCreate{if(decrypted_inf != digital_signature2)  // AssetCreate
@@ -170,7 +172,61 @@ Event1() = SourceChainAndEvent?event1new -> DestinationAndEvent?event2new -> Ski
 protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner();  // || sender1() || recipient1() || SourceChain1() || DestinationChain1() || SourceMiner1() || Event1() || DestinationMiner1();  // || Miner1() || Miner2();
 
 
-#assert protocol() deadlockfree;
+# assert protocol() deadlockfree;               // dead-lock free
 
-#define assetCheck (moneyS == 80 && moneyRnew == 20 );//&& moneyRnew == 20); //&& fakerecipientHasNoTruePk == true);   
-#assert protocol() |= <>[] assetCheck;
+
+
+
+
+
+# define BurnAddressMoney (BurnAddress == 20);  // unspendability
+# assert protocol() |= <>[] BurnAddressMoney;
+
+
+
+
+
+# define BurnTrans (BurnAddress == 20);        // burn before claim
+# define MoneyCreate (moneyRnew == 20);
+# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
+
+
+
+
+
+
+
+# define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
+# assert protocol() |= <>[] MoneyS_NoEnought;
+
+//# define money_S (moneyS == 80);                           
+//# assert protocol() |= <>[] money_S;
+//
+//# define money_R (moneyR == 20);                
+//# assert protocol() |= <>[] money_R;
+
+
+
+
+
+
+
+# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
+# assert protocol() |= <>[] FakerecipientHasNoTruePk;
+
+# define DecryptionCheck (decrypted_inf == digital_signature);
+# assert protocol() |= <>[] DecryptionCheck;
+
+
+
+
+
+
+# define money_S (moneyS == 80);               // accuracy             
+# assert protocol() |= <>[] money_S;
+
+# define money_R (moneyR == 20);                
+# assert protocol() |= <>[] money_R;
+
+# define FakeReceiver_Money (FakeReceiverMoney == 0);                
+# assert protocol() |= <>[] FakeReceiver_Money;
