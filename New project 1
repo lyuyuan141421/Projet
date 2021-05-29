@@ -36,15 +36,12 @@ var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
 var<Nonce> Message = new Nonce();
 
-var<SEnc> cipherScode;                     
-var<SDec> decipherScode;
-
 var moneyS = 100;
 var moneySnew;
 var moneyR = 0;
 var moneyRnew = 0;
 
-var asset = 110;
+var asset = 10;
 var BurnAddress = 0;   
 
 var AddressR = [PKreceive, SKreceive, moneyS];
@@ -156,11 +153,11 @@ SourceMiner1() = SourceChainAndSourceMiner?moneySnew11.BurnAddress11.encrypted_i
 ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){MinerResultVerification1 = true;}} -> SourceChainAndSourceMiner!MinerResultVerification1 -> Skip();
 
 DestinationMiner() = DestinationAndDestinationMiner?decrypted_inf1.encrypted_inf21 ->
-ResultVerification{if(decrypted_inf1 == encrypted_inf21){MinerResultVerification2 = true;}} -> 
+ResultVerification{if(decrypted_inf1 == digital_signature){MinerResultVerification2 = true;}} -> 
 DestinationAndDestinationMiner!MinerResultVerification2 -> DestinationMiner1();
 
 DestinationMiner1() = DestinationAndDestinationMiner?decrypted_inf1.encrypted_inf21 ->
-ResultVerification{if(decrypted_inf1 == encrypted_inf21){MinerResultVerification2 = true;}} -> 
+ResultVerification{if(decrypted_inf1 == digital_signature){MinerResultVerification2 = true;}} -> 
 DestinationAndDestinationMiner!MinerResultVerification2 -> Skip();
 
 Event() = SourceChainAndEvent?event1new -> DestinationAndEvent?event2new -> Event1();
