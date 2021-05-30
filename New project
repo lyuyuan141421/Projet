@@ -61,12 +61,15 @@ var MinerResultVerification1 = false;
 var MinerResultVerification2 = false;
 
 var HashResult;
-var Math_problem;
-
+var<Nonce> Math_problemS = new Nonce();
+var<Nonce> Math_problemD = new Nonce();
 var digital_signature;
 var encrypted_inf;
 var decrypted_inf;
 
+var n = 0;
+var NewBlockS = [0,0,0,0,0,0,0,0,0,0,0,0];
+var NewBlockD = [0,0,0,0,0,0,0,0,0,0,0,0];
 // digital_signature = Digital_Signature{new Pair(PKreceive,Message)} -> Skip;
 
 sender() = SenderAndRecipient!PKsender -> 
@@ -121,13 +124,37 @@ MoneyGet{if(MinerResultVerification2new1 == true){moneyR = moneyRnew1;}} -> Skip
 
 
 SourceMiner() = SourceChainAndSourceMiner?moneySnew11.BurnAddress11.encrypted_inf111.digital_signature111.asset111 -> 
-ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){MinerResultVerification1 = true;}} -> SourceChainAndSourceMiner!MinerResultVerification1 -> Skip();
+ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){MinerResultVerification1 = true;}} -> 
+HashCalculation{HashResult = new Hash(Math_problemS);} -> 
+Miner1AndSourceMiner!HashResult ->
+Miner2AndSourceMiner!HashResult ->
+Miner1AndSourceMiner?NewBlockS1 ->
+Miner2AndSourceMiner?NewBlockS2 ->
+SourceChainAndSourceMiner!MinerResultVerification1 -> Skip();
 
 
 DestinationMiner() = DestinationAndDestinationMiner?decrypted_inf1.encrypted_inf21 ->
-ResultVerification{if(decrypted_inf1 == digital_signature){MinerResultVerification2 = true;}} -> 
+ResultVerification{if(decrypted_inf1 == digital_signature){MinerResultVerification2 = true;}} ->
+HashCalculation{HashResult = new Hash(Math_problemD);} ->
+Miner1AndDestinationMiner!HashResult ->
+Miner2AndDestinationMiner!HashResult ->
+Miner1AndDestinationMiner?NewBlockS1 ->
+Miner2AndDestinationMiner?NewBlockS2 ->
 DestinationAndDestinationMiner!MinerResultVerification2 -> Skip();
 
+Miner1() = Miner1AndSourceMiner?HashResult1 -> 
+           AddNewBlock{NewBlockS[n] = 1; n++;} -> 
+           Miner1AndSourceMiner!NewBlockS ->
+           Miner1AndDestinationMiner?HashResult11 -> 
+           AddNewBlock{NewBlockS[n] = 1; n++;} -> 
+           Miner1AndDestinationMiner!NewBlockS -> Skip;
+           
+Miner2() = Miner2AndSourceMiner?HashResult2 -> 
+           AddNewBlock{NewBlockS[n] = 1; n++;} -> 
+           Miner2AndSourceMiner!NewBlockS ->
+           Miner2AndDestinationMiner?HashResult22 -> 
+           AddNewBlock{NewBlockS[n] = 1; n++;} -> 
+           Miner2AndDestinationMiner!NewBlockS -> Skip;
 
 Event() = SourceChainAndEvent?event1new -> DestinationAndEvent?event2new -> Skip();
 
@@ -135,22 +162,22 @@ Event() = SourceChainAndEvent?event1new -> DestinationAndEvent?event2new -> Skip
 // ReclaimProcess1() = ResetProcessTime -> MoneyReset{moneySnew = moneyS; moneyRnew = moneyR;} -> SourceChain();                                       
 
 
-protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner();  // || sender1() || recipient1() || SourceChain1() || DestinationChain1() || SourceMiner1() || Event1() || DestinationMiner1();  // || Miner1() || Miner2();
+protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2();  // || sender1() || recipient1() || SourceChain1() || DestinationChain1() || SourceMiner1() || Event1() || DestinationMiner1();  // || Miner1() || Miner2();
 
 
 # assert protocol() deadlockfree;               // dead-lock free
 
 
-# define BurnAddressMoney (BurnAddress == 10);  // unspendability
-# assert protocol() |= <>[] BurnAddressMoney;
+//# define BurnAddressMoney (BurnAddress == 10);  // unspendability
+//# assert protocol() |= <>[] BurnAddressMoney;
 
 
 
 
 
-# define BurnTrans (BurnAddress == 10);        // burn before claim
-# define MoneyCreate (moneyRnew == 10);
-# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
+//# define BurnTrans (BurnAddress == 10);        // burn before claim
+//# define MoneyCreate (moneyRnew == 10);
+//# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
 
 
 
@@ -158,8 +185,8 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-# define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
-# assert protocol() |= <>[] MoneyS_NoEnought;
+//# define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
+//# assert protocol() |= <>[] MoneyS_NoEnought;
 
 //# define money_S (moneyS == 80);                           
 //# assert protocol() |= <>[] money_S;
@@ -173,22 +200,22 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
-# assert protocol() |= <>[] FakerecipientHasNoTruePk;
-
-# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
-# assert protocol() |= <>[] TrueReceiverHasTruePK;
-
-
+//# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
+//# assert protocol() |= <>[] FakerecipientHasNoTruePk;
+//
+//# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
+//# assert protocol() |= <>[] TrueReceiverHasTruePK;
 
 
 
 
-# define money_S (moneyS == 90);               // accuracy             
-# assert protocol() |= <>[] money_S;
 
-# define money_R (moneyR == 10);                
-# assert protocol() |= <>[] money_R;
 
-# define FakeReceiver_Money (FakeReceiverMoney == 0);                
-# assert protocol() |= <>[] FakeReceiver_Money;
+//# define money_S (moneyS == 90);               // accuracy             
+//# assert protocol() |= <>[] money_S;
+//
+//# define money_R (moneyR == 10);                
+//# assert protocol() |= <>[] money_R;
+//
+//# define FakeReceiver_Money (FakeReceiverMoney == 0);                
+//# assert protocol() |= <>[] FakeReceiver_Money;
