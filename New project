@@ -45,6 +45,7 @@ var BurnAddress = 0;
 var FakeReceiverMoney = 0;
 var moneyS_NoEnought = false;
 var fakerecipientHasNoTruePk = false;
+var truereceiverHasTruePK = false;
 
 
 var AddressR = [PKreceive, SKreceive, moneyS];
@@ -103,7 +104,8 @@ DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2
 EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2==encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);}} ->
 AssetCreate{if(decrypted_inf == digital_signature2)  // AssetCreate digital_signature2
-               {moneyRnew = moneyR  + asset2;}} ->
+               {moneyRnew = moneyR  + asset2;
+                truereceiverHasTruePK = true;}} ->
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
 DestinationAndEvent!event2 ->
@@ -137,10 +139,6 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 # assert protocol() deadlockfree;               // dead-lock free
-
-
-
-
 
 
 # define BurnAddressMoney (BurnAddress == 10);  // unspendability
@@ -178,8 +176,8 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 # define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
 # assert protocol() |= <>[] FakerecipientHasNoTruePk;
 
-# define DecryptionCheck (decrypted_inf == digital_signature);
-# assert protocol() |= <>[] DecryptionCheck;
+# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
+# assert protocol() |= <>[] TrueReceiverHasTruePK;
 
 
 
