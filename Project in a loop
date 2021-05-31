@@ -373,11 +373,9 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-# define money_S (moneyS == 70);               // accuracy             
-# assert protocol() |= <>[] money_S;
+//# define money_S (moneyS == 70);               // accuracy             
+//# assert protocol() |= <>[] money_S;
 
-# define money_R (moneyR == 30);                
-# assert protocol() |= <>[] money_R;
+//# define money_R (moneyR == 30);                
+//# assert protocol() |= <>[] money_R;
 
-# define FakeReceiver_Money (FakeReceiverMoney == 0);                
-# assert protocol() |= <>[] FakeReceiver_Money;
