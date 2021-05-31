@@ -47,7 +47,6 @@ var moneyS_NoEnought = false;
 //var fakerecipientHasNoTruePk = true;
 var truereceiverHasTruePK = false;
 
-
 var AddressR = [PKreceive, SKreceive, moneyS];
 var AddressS = [PKsender, SKsender, moneyR];
 
