@@ -167,34 +167,34 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-# assert protocol() deadlockfree;               // dead-lock free
+//# assert protocol() deadlockfree;               // dead-lock free
 
 
-# define BurnAddressMoney (BurnAddress == 10);  // unspendability
-# assert protocol() |= <>[] BurnAddressMoney;
-
-
-
-
-
-# define BurnTrans (BurnAddress == 10);        // burn before claim
-# define MoneyCreate (moneyRnew == 10);
-# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
+//# define BurnAddressMoney (BurnAddress == 10);  // unspendability
+//# assert protocol() |= <>[] BurnAddressMoney;
 
 
 
 
 
+//# define BurnTrans (BurnAddress == 10);        // burn before claim
+//# define MoneyCreate (moneyRnew == 10);
+//# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
 
 
-# define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
-# assert protocol() |= <>[] MoneyS_NoEnought;
 
-# define money_S (moneyS == 90);                           
-# assert protocol() |= <>[] money_S;
 
-# define money_R (moneyR == 10);                
-# assert protocol() |= <>[] money_R;
+
+
+
+//# define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
+//# assert protocol() |= <>[] MoneyS_NoEnought;
+//
+//# define money_S (moneyS == 90);                           
+//# assert protocol() |= <>[] money_S;
+//
+//# define money_R (moneyR == 10);                
+//# assert protocol() |= <>[] money_R;
 
 
 
