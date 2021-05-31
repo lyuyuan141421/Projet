@@ -1,6 +1,0 @@
-SourceMiner() = SourceChainAndSourceMiner?moneySnew11.BurnAddress11.encrypted_inf111.digital_signature111.asset111 -> 
-ResultVerification{if(moneySnew11<=moneyS && BurnAddress11==asset){resultVerification1 = true;}} -> 
-HashCalculation{HashResult = new hash(Math_problem);} -> 
-Miner1AndSourceMiner!HashResult -> 
-Miner2AndSourceMiner!HashResult ->
-SourceMiner();
