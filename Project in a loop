@@ -145,9 +145,10 @@ DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2
 EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2 == encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);
                   decrypted_Sign = decrypted_inf.result();}} ->
-AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true)  // AssetCreate digital_signature2
+AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true && moneyS_NoEnought == false)  // AssetCreate digital_signature2
                {moneyRnew = moneyR  + asset2;
-                truereceiverHasTruePK = true;}} ->
+                truereceiverHasTruePK = true;}
+                else{moneyRnew = moneyR;}} ->
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
 DestinationAndEvent!event2 -> 
@@ -157,25 +158,27 @@ DestinationChain1() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf
 EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2 == encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);
                   decrypted_Sign = decrypted_inf.result();}} ->
-AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true)  // AssetCreate digital_signature2
+AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true && moneyS_NoEnought == false)  // AssetCreate digital_signature2
                {moneyRnew = moneyR  + asset2;
-                truereceiverHasTruePK = true;}} ->
+                truereceiverHasTruePK = true;}
+                else{moneyRnew = moneyR;}} ->
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
-DestinationAndEvent!event2 ->
+DestinationAndEvent!event2 -> 
 RecipientAndDestination!moneyRnew.MinerResultVerification2new -> DestinationChain2();   // interrupt[5] Reclaim();
 
 DestinationChain2() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2.digital_signature2.asset2.MinerResultVerification1new1 ->
 EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2 == encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);
                   decrypted_Sign = decrypted_inf.result();}} ->
-AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true)  // AssetCreate digital_signature2
+AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true && moneyS_NoEnought == false)  // AssetCreate digital_signature2
                {moneyRnew = moneyR  + asset2;
-                truereceiverHasTruePK = true;}} ->
+                truereceiverHasTruePK = true;}
+                else{moneyRnew = moneyR;}} ->
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
-DestinationAndEvent!event2 ->
-RecipientAndDestination!moneyRnew.MinerResultVerification2new -> Skip();   // interrupt[5] Reclaim();
+DestinationAndEvent!event2 -> 
+RecipientAndDestination!moneyRnew.MinerResultVerification2new -> Skip();   // interrupt[5] Reclaim();   // interrupt[5] Reclaim();
 
 
 
@@ -352,20 +355,15 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 # define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
 # assert protocol() |= <>[] MoneyS_NoEnought;
 
-//# define money_S (moneyS == 100);                           
-//# assert protocol() |= <>[] money_S;
-//
-//# define money_R (moneyR == 0);                
-//# assert protocol() |= <>[] money_R;
+# define money_S (moneyS == 70);                           
+# assert protocol() |= <>[] money_S;
+
+# define money_R (moneyR == 30);                
+# assert protocol() |= <>[] money_R;
 
 
 
 
-
-
-
-//# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
-//# assert protocol() |= <>[] FakerecipientHasNoTruePk;
 
 # define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
 # assert protocol() |= <>[] TrueReceiverHasTruePK;
