@@ -35,25 +35,29 @@ var<PKey> PKsender = new PKey(SKsender);
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
 var<Nonce> Message = new Nonce();
+
 var moneyS = 100;
 var moneySnew;
 var moneyR = 0;
 var moneyRnew ;
-var asset = 10;
+var asset = 110;
 var BurnAddress = 0;
-var FakeReceiverMoney = 0;
 var moneyS_NoEnought = false;
-//var fakerecipientHasNoTruePk = true;
 var truereceiverHasTruePK = false;
+
+
 var AddressR = [PKreceive, SKreceive, moneyS];
 var AddressS = [PKsender, SKsender, moneyR];
+
 var event1 = [PKsender, Message, asset];
 var event2 = [PKreceive, Message, asset];
 var event3 = 0;
+
 var moneySnewCheck = false;
 var reclaimResult = false;
 var MinerResultVerification1 = false;
 var MinerResultVerification2 = false;
+
 var HashResult;
 var<Nonce> Math_problemS = new Nonce();
 var<Nonce> Math_problemD = new Nonce();
@@ -61,6 +65,7 @@ var<Sign> digital_signature;
 var<AEnc> encrypted_inf;
 var<ADec> decrypted_inf;
 var<Sign> decrypted_Sign;
+
 var n = 0;
 var NewBlockS = [0,0,0,0,0,0,0,0,0,0,0,0];
 var NewBlockD = [0,0,0,0,0,0,0,0,0,0,0,0];
@@ -95,9 +100,10 @@ DestinationChain() = SourceAndDestination?moneySnew1.BurnAddress1.encrypted_inf2
 EntryTransaction{if(moneySnew1<=moneyS && BurnAddress1==asset2 && encrypted_inf2 == encrypted_inf && digital_signature2 == digital_signature && MinerResultVerification1new1 == true)  // EntryTransaction
                  {decrypted_inf = new ADec(encrypted_inf2,SKreceive);
                   decrypted_Sign = decrypted_inf.result();}} ->
-AssetCreate{if(decrypted_Sign.Signequal(digital_signature2) == true)  // AssetCreate digital_signature2
+AssetCreate{if(decrypted_Sign == digital_signature2 && moneyS_NoEnought == false)  // AssetCreate digital_signature2 // decrypted_Sign.Signequal(digital_signature2) == true
                {moneyRnew = moneyR  + asset2;
-                truereceiverHasTruePK = true;}} ->
+                truereceiverHasTruePK = true;}
+                else{moneyRnew = moneyR;}} ->
 DestinationAndDestinationMiner!decrypted_inf.encrypted_inf2 ->
 DestinationAndDestinationMiner?MinerResultVerification2new ->
 DestinationAndEvent!event2 ->
@@ -161,19 +167,19 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-# assert protocol() deadlockfree;               // dead-lock free
+//# assert protocol() deadlockfree;               // dead-lock free
 
 
-# define BurnAddressMoney (BurnAddress == 10);  // unspendability
-# assert protocol() |= <>[] BurnAddressMoney;
+//# define BurnAddressMoney (BurnAddress == 10);  // unspendability
+//# assert protocol() |= <>[] BurnAddressMoney;
 
 
 
 
 
-# define BurnTrans (BurnAddress == 10);        // burn before claim
-# define MoneyCreate (moneyRnew == 10);
-# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
+//# define BurnTrans (BurnAddress == 10);        // burn before claim
+//# define MoneyCreate (moneyRnew == 10);
+//# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
 
 
 
@@ -184,33 +190,28 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 # define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
 # assert protocol() |= <>[] MoneyS_NoEnought;
 
-//# define money_S (moneyS == 100);                           
-//# assert protocol() |= <>[] money_S;
-//
-//# define money_R (moneyR == 0);                
-//# assert protocol() |= <>[] money_R;
-
-
-
-
-
-
-//# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
-//# assert protocol() |= <>[] FakerecipientHasNoTruePk;
-
-# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
-# assert protocol() |= <>[] TrueReceiverHasTruePK;
-
-
-
-
-
-
-# define money_S (moneyS == 90);               // accuracy             
+# define money_S (moneyS == 100);                           
 # assert protocol() |= <>[] money_S;
 
-# define money_R (moneyR == 10);                
+# define money_R (moneyR == 0);                
 # assert protocol() |= <>[] money_R;
 
-# define FakeReceiver_Money (FakeReceiverMoney == 0);                
-# assert protocol() |= <>[] FakeReceiver_Money;
+
+
+
+
+
+//# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);  // Security
+//# assert protocol() |= <>[] TrueReceiverHasTruePK;
+
+
+
+
+
+
+//# define money_S (moneyS == 90);               // accuracy             
+//# assert protocol() |= <>[] money_S;
+//
+//# define money_R (moneyR == 10);                
+//# assert protocol() |= <>[] money_R;
+
