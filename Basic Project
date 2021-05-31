@@ -35,7 +35,6 @@ var<PKey> PKsender = new PKey(SKsender);
 var<SKey> SKreceive = new SKey();
 var<PKey> PKreceive = new PKey(SKreceive); 
 var<Nonce> Message = new Nonce();
-
 var moneyS = 100;
 var moneySnew;
 var moneyR = 0;
@@ -46,19 +45,15 @@ var FakeReceiverMoney = 0;
 var moneyS_NoEnought = false;
 //var fakerecipientHasNoTruePk = true;
 var truereceiverHasTruePK = false;
-
 var AddressR = [PKreceive, SKreceive, moneyS];
 var AddressS = [PKsender, SKsender, moneyR];
-
 var event1 = [PKsender, Message, asset];
 var event2 = [PKreceive, Message, asset];
 var event3 = 0;
-
 var moneySnewCheck = false;
 var reclaimResult = false;
 var MinerResultVerification1 = false;
 var MinerResultVerification2 = false;
-
 var HashResult;
 var<Nonce> Math_problemS = new Nonce();
 var<Nonce> Math_problemD = new Nonce();
@@ -66,7 +61,6 @@ var<Sign> digital_signature;
 var<AEnc> encrypted_inf;
 var<ADec> decrypted_inf;
 var<Sign> decrypted_Sign;
-
 var n = 0;
 var NewBlockS = [0,0,0,0,0,0,0,0,0,0,0,0];
 var NewBlockD = [0,0,0,0,0,0,0,0,0,0,0,0];
