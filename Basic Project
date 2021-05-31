@@ -40,7 +40,7 @@ var moneyS = 100;
 var moneySnew;
 var moneyR = 0;
 var moneyRnew ;
-var asset = 110;
+var asset = 10;
 var BurnAddress = 0;
 var moneyS_NoEnought = false;
 var truereceiverHasTruePK = false;
@@ -167,19 +167,19 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-//# assert protocol() deadlockfree;               // dead-lock free
+# assert protocol() deadlockfree;               // dead-lock free
 
 
-//# define BurnAddressMoney (BurnAddress == 10);  // unspendability
-//# assert protocol() |= <>[] BurnAddressMoney;
+# define BurnAddressMoney (BurnAddress == 10);  // unspendability
+# assert protocol() |= <>[] BurnAddressMoney;
 
 
 
 
 
-//# define BurnTrans (BurnAddress == 10);        // burn before claim
-//# define MoneyCreate (moneyRnew == 10);
-//# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
+# define BurnTrans (BurnAddress == 10);        // burn before claim
+# define MoneyCreate (moneyRnew == 10);
+# assert protocol() |= [] (([] !MoneyCreate) || (!MoneyCreate U BurnTrans));
 
 
 
@@ -190,10 +190,10 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 # define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
 # assert protocol() |= <>[] MoneyS_NoEnought;
 
-# define money_S (moneyS == 100);                           
+# define money_S (moneyS == 90);                           
 # assert protocol() |= <>[] money_S;
 
-# define money_R (moneyR == 0);                
+# define money_R (moneyR == 10);                
 # assert protocol() |= <>[] money_R;
 
 
@@ -201,17 +201,17 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 
 
-//# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);  // Security
-//# assert protocol() |= <>[] TrueReceiverHasTruePK;
+# define TrueReceiverHasTruePK (truereceiverHasTruePK == true);  // Security
+# assert protocol() |= <>[] TrueReceiverHasTruePK;
 
 
 
 
 
 
-//# define money_S (moneyS == 90);               // accuracy             
-//# assert protocol() |= <>[] money_S;
-//
-//# define money_R (moneyR == 10);                
-//# assert protocol() |= <>[] money_R;
+# define money_S (moneyS == 90);               // accuracy             
+# assert protocol() |= <>[] money_S;
+
+# define money_R (moneyR == 10);                
+# assert protocol() |= <>[] money_R;
 
