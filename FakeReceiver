@@ -79,7 +79,7 @@ sender() = SenderAndRecipient!PKsender ->
 SenderAndRecipient?PKreceive1 -> 
 SenderAndRecipient?BurnAddress1 -> 
 Digital_Signature{digital_signature = new Sign(Message,SKsender);} -> 
-Encrypted_inf{encrypted_inf = new AEnc(digital_signature, PKreceive);} -> 
+Encrypted_inf{encrypted_inf = new AEnc(digital_signature, PKreceive1);} -> 
 SenderAndSourceChain!encrypted_inf.asset.BurnAddress1.digital_signature.PKsender -> Skip();
 
 SourceChain() = SenderAndSourceChain?encrypted_inf1.asset1.BurnAddress2.digital_signature1.PKsender1 -> 
