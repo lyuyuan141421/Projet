@@ -44,7 +44,7 @@ var asset = 10;
 var BurnAddress = 0;
 var FakeReceiverMoney = 0;
 var moneyS_NoEnought = false;
-var fakerecipientHasNoTruePk = true;
+//var fakerecipientHasNoTruePk = true;
 var truereceiverHasTruePK = false;
 
 
@@ -191,20 +191,20 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 # define MoneyS_NoEnought (moneyS_NoEnought == true);   // Ownership
 # assert protocol() |= <>[] MoneyS_NoEnought;
 
-# define money_S (moneyS == 100);                           
-# assert protocol() |= <>[] money_S;
-
-# define money_R (moneyR == 0);                
-# assert protocol() |= <>[] money_R;
-
-
+//# define money_S (moneyS == 100);                           
+//# assert protocol() |= <>[] money_S;
+//
+//# define money_R (moneyR == 0);                
+//# assert protocol() |= <>[] money_R;
 
 
 
 
 
-# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
-# assert protocol() |= <>[] FakerecipientHasNoTruePk;
+
+
+//# define FakerecipientHasNoTruePk (fakerecipientHasNoTruePk == true);      //Security
+//# assert protocol() |= <>[] FakerecipientHasNoTruePk;
 
 # define TrueReceiverHasTruePK (truereceiverHasTruePK == true);
 # assert protocol() |= <>[] TrueReceiverHasTruePK;
@@ -222,4 +222,3 @@ protocol() = sender() || recipient() || SourceChain() || DestinationChain() || S
 
 # define FakeReceiver_Money (FakeReceiverMoney == 0);                
 # assert protocol() |= <>[] FakeReceiver_Money;
-protocol() = sender() || recipient() || SourceChain() || DestinationChain() || SourceMiner() || Event() || DestinationMiner() || Miner1() || Miner2();
